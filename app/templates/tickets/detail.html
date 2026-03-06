@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket #{{ ticket.id }} - SLA Ticketing{% endblock %}
+
+{% block content %}
+  <div class="mb-3">
+    <h2>Ticket #{{ ticket.id }} - {{ ticket.title }}</h2>
+    <a href="{{ url_for('tickets.ticket_dashboard') }}" class="btn btn-sm btn-outline-secondary mt-1">&larr; Back to list</a>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card mb-3">
+        <div class="card-header">
+          Details
+        </div>
+        <div class="card-body">
+          <p><strong>Status:</strong> {{ ticket.status.replace("_", " ")|title }}</p>
+          <p><strong>Issue Type:</strong> {{ ticket.issue_type.replace("_", " ")|title }}</p>
+          <p><strong>Priority:</strong> {{ ticket.priority }}</p>
+          <p class="d-flex justify-content-between align-items-center">
+            <strong>Assignee:</strong>
+            <span>{{ ticket.assignee.name if ticket.assignee else "Unassigned" }}</span>
+            {% if current_user.role == 'agent' and not ticket.assignee %}
+            <form method="post" action="{{ url_for('tickets.take_ticket', ticket_id=ticket.id) }}" class="mb-0">
+              <button type="submit" class="btn btn-sm btn-primary">Assign to me</button>
+            </form>
+            {% endif %}
+          </p>
+          <p><strong>Created:</strong> {{ ticket.created_at }}</p>
+          <p><strong>Created by:</strong> {{ ticket.created_by.name if ticket.created_by else "-" }}</p>
+          <p><strong>Description:</strong></p>
+          <p>{{ ticket.description }}</p>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header">
+          Classification
+        </div>
+        <div class="card-body">
+          {% if ticket.issue_type in ["incident", "problem"] %}
+            <p><strong>Impact:</strong> {{ ticket.impact or "-" }}</p>
+            <p><strong>Urgency:</strong> {{ ticket.urgency or "-" }}</p>
+            <p><strong>System Affected:</strong> {{ ticket.system_affected or "-" }}</p>
+          {% elif ticket.issue_type == "service_request" %}
+            <p><strong>Request Category:</strong> {{ ticket.request_category or "-" }}</p>
+            <p><strong>Department:</strong> {{ ticket.department or "-" }}</p>
+            <p><strong>Approval Required:</strong> {{ "Yes" if ticket.approval_required else "No" }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header">
+          Comments
+        </div>
+        <div class="card-body">
+          {% if ticket.comments %}
+            <ul class="list-unstyled mb-3">
+              {% for comment in ticket.comments %}
+                <li class="mb-3 pb-2 border-bottom border-secondary">
+                  <div class="d-flex justify-content-between">
+                    <strong>{{ comment.author.name if comment.author else "User" }}</strong>
+                    <small class="text-muted">{{ comment.created_at }}</small>
+                  </div>
+                  <p class="mb-0 mt-1">{{ comment.body }}</p>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted mb-3">No comments yet.</p>
+          {% endif %}
+
+          <form method="post" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}">
+            <div class="mb-2">
+              <label for="body" class="form-label">Add comment</label>
+              <textarea id="body" name="body" class="form-control" rows="3" placeholder="Add an internal note or update..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card mb-3">
+        <div class="card-header">
+          SLA
+        </div>
+        <div class="card-body">
+          <p><strong>Response due:</strong> {{ sla_data.response_deadline or "N/A" }}</p>
+          <p><strong>Resolution due:</strong> {{ sla_data.resolution_deadline or "N/A" }}</p>
+
+          <p><strong>First response at:</strong> {{ ticket.first_response_at or "-" }}</p>
+          <p><strong>Resolved at:</strong> {{ ticket.resolved_at or "-" }}</p>
+
+          <p><strong>Total pause:</strong>
+            {% if ticket.total_pause_duration_seconds %}
+              {{ (ticket.total_pause_duration_seconds // 3600) }}h
+              {{ (ticket.total_pause_duration_seconds // 60) % 60 }}m
+            {% else %}
+              0h 0m
+            {% endif %}
+          </p>
+
+          <p>
+            <strong>Response breach:</strong>
+            {% if ticket.response_breached %}
+              <span class="badge bg-danger">Breached</span>
+            {% else %}
+              <span class="badge bg-success">Within SLA</span>
+            {% endif %}
+          </p>
+          <p>
+            <strong>Resolution breach:</strong>
+            {% if ticket.resolution_breached %}
+              <span class="badge bg-danger">Breached</span>
+            {% else %}
+              <span class="badge bg-success">Within SLA</span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header">
+          Change Status
+        </div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('tickets.update_status', ticket_id=ticket.id) }}">
+            <div class="mb-3">
+              <label for="status" class="form-label">New Status</label>
+              <select id="status" name="status" class="form-select">
+                {% for s in ["new", "in_progress", "on_hold", "resolved", "closed"] %}
+                  <option value="{{ s }}" {% if ticket.status == s %}selected{% endif %}>
+                    {{ s.replace("_", " ")|title }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Update Status</button>
+          </form>
+        </div>
+      </div>
+
+      {% if current_user.role == "manager" %}
+      <div class="card">
+        <div class="card-header">
+          Assign to Agent
+        </div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('tickets.assign_ticket', ticket_id=ticket.id) }}">
+            <div class="mb-3">
+              <label for="assignee_id" class="form-label">Agent</label>
+              <select id="assignee_id" name="assignee_id" class="form-select">
+                <option value="" {% if not ticket.assignee %}selected{% endif %}>Unassigned</option>
+                {% for agent in agents %}
+                  <option value="{{ agent.id }}" {% if ticket.assignee and ticket.assignee.id == agent.id %}selected{% endif %}>
+                    {{ agent.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Update Assignment</button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+

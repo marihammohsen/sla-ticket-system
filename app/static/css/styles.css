@@ -1,0 +1,142 @@
+:root {
+  --bg-body: #f4f5f7;
+  --bg-surface: #ffffff;
+  --bg-surface-alt: #f7f8fa;
+  --border-subtle: #dcdfe4;
+  --text-main: #172b4d;
+  --text-muted: #6b778c;
+  --accent: #0052cc; /* Jira blue */
+  --accent-soft: rgba(0, 82, 204, 0.12);
+}
+
+body {
+  background-color: var(--bg-body);
+  color: var(--text-main);
+}
+
+.navbar {
+  background-color: #0747a6 !important;
+  border-bottom: 1px solid #073062;
+}
+
+.navbar-brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.card,
+.dropdown-menu,
+.modal-content {
+  background-color: var(--bg-surface);
+  border-color: var(--border-subtle) !important;
+  border-radius: 0.5rem;
+}
+
+.card-header {
+  border-bottom-color: var(--border-subtle) !important;
+  font-weight: 500;
+  background-color: var(--bg-surface-alt);
+}
+
+.table {
+  color: var(--text-main);
+  border-color: var(--border-subtle);
+}
+
+.table thead {
+  background-color: var(--bg-surface-alt);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  --bs-table-accent-bg: #fafbfc;
+}
+
+.table-striped > tbody > tr:nth-of-type(even) {
+  --bs-table-accent-bg: #ffffff;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #ebecf0;
+}
+
+.form-control,
+.form-select {
+  background-color: #ffffff;
+  border-color: var(--border-subtle);
+  color: var(--text-main);
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 1px var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #0065ff;
+}
+
+.btn-outline-secondary {
+  border-color: var(--border-subtle);
+  color: var(--text-main);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--bg-surface-alt);
+}
+
+.badge.bg-danger {
+  background-color: #de350b !important;
+}
+
+.badge.bg-success {
+  background-color: #36b37e !important;
+}
+
+.dashboard-card {
+  border-radius: 0.5rem;
+  background-color: var(--bg-surface);
+}
+
+.dashboard-card .display-6 {
+  font-weight: 600;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.alert {
+  background-color: #fff;
+  border-color: var(--border-subtle);
+  color: var(--text-main);
+}
+
+/* Ensure navbar dropdown does not change navbar height when opened */
+.navbar {
+  overflow: visible;
+}
+
+.navbar .dropdown-menu {
+  position: absolute; /* take menu out of flow */
+  top: 100%;
+  left: 0;
+  z-index: 2000;
+  min-width: 12rem;
+}
+
+/* Slight shadow for dropdown so it reads as floating */
+.navbar .dropdown-menu {
+  box-shadow: 0 6px 18px rgba(11, 22, 61, 0.12);
+}
+

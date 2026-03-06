@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Create Ticket - SLA Ticketing{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-md-8">
+      <h2>Create Ticket</h2>
+      <form method="post" class="mt-3">
+        <div class="mb-3">
+          <label for="title" class="form-label">Title</label>
+          <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label for="issue_type" class="form-label">Issue Type</label>
+          <select class="form-select" id="issue_type" name="issue_type" required>
+            <option value="">Select type...</option>
+            <option value="incident">Incident</option>
+            <option value="problem">Problem</option>
+            <option value="service_request">Service Request</option>
+          </select>
+        </div>
+
+        <div id="incident-problem-fields">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="impact" class="form-label">Impact</label>
+              <select class="form-select" id="impact" name="impact">
+                <option value="">Select impact...</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="urgency" class="form-label">Urgency</label>
+              <select class="form-select" id="urgency" name="urgency">
+                <option value="">Select urgency...</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="system_affected" class="form-label">System Affected</label>
+            <input type="text" class="form-control" id="system_affected" name="system_affected">
+          </div>
+        </div>
+
+        <div id="service-request-fields">
+          <div class="mb-3">
+            <label for="request_category" class="form-label">Request Category</label>
+            <input type="text" class="form-control" id="request_category" name="request_category">
+          </div>
+          <div class="mb-3">
+            <label for="department" class="form-label">Department</label>
+            <input type="text" class="form-control" id="department" name="department">
+          </div>
+          <div class="mb-3">
+            <label class="form-label d-block">Approval Required</label>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="approval_required" id="approval_yes" value="yes">
+              <label class="form-check-label" for="approval_yes">Yes</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="approval_required" id="approval_no" value="no">
+              <label class="form-check-label" for="approval_no">No</label>
+            </div>
+          </div>
+        </div>
+
+
+        <button type="submit" class="btn btn-primary">Create Ticket</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const issueTypeSelect = document.getElementById('issue_type');
+    const incidentProblemFields = document.getElementById('incident-problem-fields');
+    const serviceRequestFields = document.getElementById('service-request-fields');
+
+    function updateFieldVisibility() {
+      const value = issueTypeSelect.value;
+      if (value === 'incident' || value === 'problem') {
+        incidentProblemFields.style.display = '';
+        serviceRequestFields.style.display = 'none';
+      } else if (value === 'service_request') {
+        incidentProblemFields.style.display = 'none';
+        serviceRequestFields.style.display = '';
+      } else {
+        incidentProblemFields.style.display = 'none';
+        serviceRequestFields.style.display = 'none';
+      }
+    }
+
+    issueTypeSelect.addEventListener('change', updateFieldVisibility);
+    updateFieldVisibility();
+  </script>
+{% endblock %}
+

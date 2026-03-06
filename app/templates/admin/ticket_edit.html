@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Ticket #{{ ticket.id }} - SLA Ticketing{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Edit Ticket #{{ ticket.id }}</h2>
+    <a href="{{ url_for('tickets.ticket_detail', ticket_id=ticket.id) }}" class="btn btn-sm btn-outline-secondary">Back to ticket</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="post">
+        <div class="mb-3">
+          <label for="title" class="form-label">Title</label>
+          <input type="text" id="title" name="title" class="form-control" value="{{ ticket.title }}" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea id="description" name="description" class="form-control" rows="4" required>{{ ticket.description }}</textarea>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="priority" class="form-label">Priority</label>
+            <select id="priority" name="priority" class="form-select">
+              {% for p in ["P1", "P2", "P3", "P4"] %}
+                <option value="{{ p }}" {% if ticket.priority == p %}selected{% endif %}>{{ p }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label for="assignee_id" class="form-label">Assignee</label>
+            <select id="assignee_id" name="assignee_id" class="form-select">
+              <option value="">Unassigned</option>
+              {% for agent in agents %}
+                <option value="{{ agent.id }}" {% if ticket.assignee and ticket.assignee.id == agent.id %}selected{% endif %}>
+                  {{ agent.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+

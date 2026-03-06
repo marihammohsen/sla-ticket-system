@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Manager Dashboard - SLA Ticketing{% endblock %}
+
+{% block content %}
+  <h2 class="mb-4">Manager Dashboard</h2>
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-bg-light mb-3">
+        <div class="card-body">
+          <h6 class="card-title">SLA Compliance Rate</h6>
+          <p class="card-text display-6">{{ sla_compliance }}%</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-bg-light mb-3">
+        <div class="card-body">
+          <h6 class="card-title">Breached Tickets (Response)</h6>
+          <p class="card-text display-6">{{ breached_counts.response_breached }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-bg-light mb-3">
+        <div class="card-body">
+          <h6 class="card-title">Breached Tickets (Resolution)</h6>
+          <p class="card-text display-6">{{ breached_counts.resolution_breached }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-bg-light mb-3">
+        <div class="card-body">
+          <h6 class="card-title">Avg Resolution Time</h6>
+          <p class="card-text">
+            {{ avg_resolution }} min<br>
+            <small class="text-muted">Avg Response: {{ avg_response }} min</small>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          Tickets by Priority
+        </div>
+        <div class="card-body">
+          <canvas id="priorityChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="card">
+        <div class="card-header">
+          Tickets by Type
+        </div>
+        <div class="card-body">
+          <canvas id="typeChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const byPriority = {{ by_priority | tojson }};
+    const byType = {{ by_type | tojson }};
+
+    const priorityCtx = document.getElementById('priorityChart');
+    const typeCtx = document.getElementById('typeChart');
+
+    const priorityLabels = Object.keys(byPriority);
+    const priorityValues = Object.values(byPriority);
+
+    const typeLabels = Object.keys(byType).map(t => t.replace('_', ' '));
+    const typeValues = Object.values(byType);
+
+    new Chart(priorityCtx, {
+      type: 'bar',
+      data: {
+        labels: priorityLabels,
+        datasets: [{
+          label: 'Tickets',
+          data: priorityValues,
+          backgroundColor: 'rgba(54, 162, 235, 0.7)',
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            precision: 0
+          }
+        }
+      }
+    });
+
+    new Chart(typeCtx, {
+      type: 'doughnut',
+      data: {
+        labels: typeLabels,
+        datasets: [{
+          data: typeValues,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+  </script>
+{% endblock %}
+

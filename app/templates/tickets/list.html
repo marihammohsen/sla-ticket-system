@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Tickets - SLA Ticketing{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      {% if current_user.role == 'agent' %}
+        <h2 class="mb-0">Ticket Dashboard</h2>
+        <small class="text-muted">{% if selected_view == 'all' %}Unassigned tickets{% else %}My tickets{% endif %}</small>
+      {% else %}
+        <h2 class="mb-0">Ticket Dashboard</h2>
+        <small class="text-muted ms-2">{% if selected_view == 'all' %}All tickets{% else %}My issues{% endif %}</small>
+      {% endif %}
+
+      {% if current_user.role == 'manager' and selected_view == 'all' %}
+      <form method="get" class="d-inline-block ms-3">
+        <input type="hidden" name="view" value="all">
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="checkbox" id="unassigned" name="unassigned" value="1" {% if show_unassigned %}checked{% endif %}>
+          <label class="form-check-label" for="unassigned">Unassigned only</label>
+        </div>
+        <button type="submit" class="btn btn-sm btn-secondary">Apply</button>
+      </form>
+      {% endif %}
+    </div>
+    <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-sm btn-primary">Create Ticket</a>
+  </div>
+
+  <!-- filtering options -->
+  <form method="get" class="row gy-2 gx-3 align-items-end mb-3">
+    {% if selected_view %}<input type="hidden" name="view" value="{{ selected_view }}">{% endif %}
+    {% if selected_scope %}<input type="hidden" name="scope" value="{{ selected_scope }}">{% endif %}
+
+    {% if not (current_user.role == 'agent' and selected_view == 'all') %}
+      <div class="col-md-2">
+        <label for="priority" class="form-label">Priority</label>
+        <select id="priority" name="priority" class="form-select">
+          <option value="">All</option>
+          {% for p in ["P1","P2","P3","P4"] %}
+            <option value="{{ p }}" {% if selected_priority == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label for="status" class="form-label">Status</label>
+        <select id="status" name="status" class="form-select">
+          <option value="">All</option>
+          {% for s in ["new","in_progress","on_hold","resolved","closed"] %}
+            <option value="{{ s }}" {% if selected_status == s %}selected{% endif %}>{{ s|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label for="issue_type" class="form-label">Type</label>
+        <select id="issue_type" name="issue_type" class="form-select">
+          <option value="">All</option>
+          {% for t in ["incident","problem","service_request"] %}
+            <option value="{{ t }}" {% if selected_issue_type == t %}selected{% endif %}>{{ t.replace("_"," ")|title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label for="sla" class="form-label">SLA</label>
+        <select id="sla" name="sla" class="form-select">
+          <option value="">All</option>
+          <option value="breached" {% if selected_sla == 'breached' %}selected{% endif %}>Breached</option>
+          <option value="within" {% if selected_sla == 'within' %}selected{% endif %}>Within SLA</option>
+        </select>
+      </div>
+    {% else %}
+      <!-- agent in all view: unassigned only filters -->
+      <div class="col-md-2">
+        <label for="status" class="form-label">Status</label>
+        <select id="status" name="status" class="form-select">
+          <option value="">All</option>
+          {% for s in ["new","in_progress","on_hold","resolved","closed"] %}
+            <option value="{{ s }}" {% if selected_status == s %}selected{% endif %}>{{ s|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label for="priority" class="form-label">Priority</label>
+        <select id="priority" name="priority" class="form-select">
+          <option value="">All</option>
+          {% for p in ["P1","P2","P3","P4"] %}
+            <option value="{{ p }}" {% if selected_priority == p %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label for="issue_type" class="form-label">Type</label>
+        <select id="issue_type" name="issue_type" class="form-select">
+          <option value="">All</option>
+          {% for t in ["incident","problem","service_request"] %}
+            <option value="{{ t }}" {% if selected_issue_type == t %}selected{% endif %}>{{ t.replace("_"," ")|title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    {% endif %}
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-secondary">Apply</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Summary</th>
+          <th>Type</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>SLA</th>
+          <th>Assignee</th>
+          <th>Created by</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in tickets %}
+          {% set info = sla_info.get(ticket.id) %}
+          {% set res_delta = info.resolution_delta if info else None %}
+          {% if res_delta %}
+            {% if res_delta.total_seconds() < 0 %}
+              {% set sla_class = "text-danger" %}
+            {% elif res_delta.total_seconds() < 3600 %}
+              {% set sla_class = "text-warning" %}
+            {% else %}
+              {% set sla_class = "text-success" %}
+            {% endif %}
+          {% else %}
+            {% set sla_class = "text-muted" %}
+          {% endif %}
+          <tr>
+            <td><a href="{{ url_for('tickets.ticket_detail', ticket_id=ticket.id) }}">TKT-{{ ticket.id }}</a></td>
+            <td>{{ ticket.title }}</td>
+            <td>{{ ticket.issue_type.replace("_", " ")|title }}</td>
+            <td>{{ ticket.priority }}</td>
+            <td>{{ ticket.status.replace("_", " ")|title }}</td>
+            <td class="{{ sla_class }}">
+              {% if res_delta %}
+                {% if res_delta.total_seconds() < 0 %}
+                  Breached by {{ (-res_delta).seconds // 3600 }}h {{ ((-res_delta).seconds // 60) % 60 }}m
+                {% else %}
+                  {{ res_delta.seconds // 3600 }}h {{ (res_delta.seconds // 60) % 60 }}m remaining
+                {% endif %}
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
+            <td>{{ ticket.assignee.name if ticket.assignee else "Unassigned" }}</td>
+            <td>{{ ticket.created_by.name if ticket.created_by else "-" }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" class="text-center text-muted">No tickets found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
+
