@@ -107,7 +107,7 @@ Typical ticket lifecycle:
 ![Dashboard](screenshots/create_ticket_incident.png)
 
 ### Ticket overview
-![Dashboard](screenshots/ticket_overview.png)
+![Dashboard](screenshots/tickets_overview.png)
 
 ### Ticket details 
 ![Dashboard](screenshots/ticket_details_adminview.png)
